@@ -1,31 +1,48 @@
 export function initFiltering(elements) {
   const updateIndexes = (elements, indexes) => {
     Object.keys(indexes).forEach((elementName) => {
-      const target = elements[elementName];
-      if (!target) return;
-      target.innerHTML = '<option value=""></option>';
-      Object.entries(indexes[elementName]).forEach(([id, name]) => {
-        const el = document.createElement("option");
-        el.textContent = name;
-        el.value = name;
-        target.appendChild(el);
-      });
+      elements[elementName].append(
+        ...Object.values(indexes[elementName]).map((name) => {
+          const el = document.createElement("option");
+          el.textContent = name;
+          el.value = name;
+          return el;
+        })
+      );
     });
   };
 
   const applyFiltering = (query, state, action) => {
+    if (action && action.name === "clear") {
+      const input = action.button.parentElement.querySelector("input");
+      if (input) {
+        input.value = "";
+        const field = action.button.dataset.field;
+        if (field) {
+          state[field] = "";
+        }
+      }
+    }
+
     const filter = {};
     Object.keys(elements).forEach((key) => {
-      const el = elements[key];
-      if (!el) return;
-      if (["INPUT", "SELECT"].includes(el.tagName) && el.value) {
-        filter[`filter[${el.name}]`] = el.value;
+      if (elements[key]) {
+        if (
+          ["INPUT", "SELECT"].includes(elements[key].tagName) &&
+          elements[key].value
+        ) {
+          filter[`filter[${elements[key].name}]`] = elements[key].value;
+        }
       }
     });
+
     return Object.keys(filter).length
       ? Object.assign({}, query, filter)
       : query;
   };
 
-  return { updateIndexes, applyFiltering };
+  return {
+    updateIndexes,
+    applyFiltering,
+  };
 }
